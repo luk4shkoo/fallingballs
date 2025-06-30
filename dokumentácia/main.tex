@@ -1,0 +1,133 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[slovak]{babel}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usetikzlibrary{shapes,arrows,positioning}
+
+\title{Dokumentácia k projektu FallingBalls}
+\author{Lukáš Belavý}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Zámer projektu}
+FallingBalls je hra, kde hráč ovláda paddle (pádlo) na spodku obrazovky a snaží sa zostreliť padajúce loptičky pred tým, než sa dotknú pádla. Hra implementuje rôzne typy loptičiek s unikátnym správaním:
+\begin{itemize}
+    \item Normálne loptičky (červené) - základný typ
+    \item Rýchle loptičky (modré) - pohybujú sa rýchlejšie
+    \item Deliteľné loptičky (fialové) - pri zásahu sa rozdelia na dve menšie
+    \item Odolné loptičky (zelené) - vyžadujú dva zásahy na zničenie
+\end{itemize}
+
+Cieľom je dosiahnuť čo najvyššie skóre zostreľovaním loptičiek, pričom každý typ má inú bodovú hodnotu.
+
+\section{Diagram tried hierarchie dedenia}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2cm,
+    class/.style={
+        rectangle,
+        draw,
+        rounded corners=3pt,
+        text width=4cm,
+        minimum height=1.5cm,
+        text centered,
+        fill=white
+    },
+    arrow/.style={->,>=stealth,thick}
+]
+% Abstract base class
+\node[class, fill=gray!10] (ball) {
+    \textbf{Ball}\\
+    \footnotesize{move(), draw(), onHit()}
+};
+
+% Second layer classes
+\node[class] (normal) [below left=2cm and 1cm of ball] {
+    \textbf{NormalBall}\\
+    \footnotesize{Základná implementácia}\\
+    \footnotesize{(červená farba)}
+};
+
+\node[class] (tough) [below=2cm of ball] {
+    \textbf{ToughBall}\\
+    \footnotesize{Prekonáva onHit(), draw()}\\
+    \footnotesize{(zelená farba, 2 zásahy)}
+};
+
+\node[class] (split) [below right=2cm and 1cm of ball] {
+    \textbf{SplitBall}\\
+    \footnotesize{Prekonáva onHit()}\\
+    \footnotesize{(fialová farba, delenie)}
+};
+
+% Third layer - FastBall
+\node[class] (fast) [below=2cm of normal] {
+    \textbf{FastBall}\\
+    \footnotesize{Modifikuje rýchlosť}\\
+    \footnotesize{(modrá farba)}
+};
+
+% Draw inheritance arrows
+\draw[arrow] (normal.north) -- (ball.south west);
+\draw[arrow] (tough.north) -- (ball.south);
+\draw[arrow] (split.north) -- (ball.south east);
+\draw[arrow] (fast.north) -- (normal.south);
+
+\end{tikzpicture}
+\end{center}
+
+\section{OOP črty v programe}
+
+\subsection{1. Dedenie}
+Program využíva viacúrovňovú hierarchiu dedenia:
+\begin{itemize}
+    \item Abstraktná trieda \texttt{Ball} definuje základné správanie všetkých loptičiek
+    \item Konkrétne triedy (\texttt{NormalBall}, \texttt{FastBall}, \texttt{ToughBall}, \texttt{SplitBall}) dedia od \texttt{Ball}
+    \item Každá podtrieda rozširuje alebo modifikuje správanie základnej triedy
+\end{itemize}
+
+\subsection{2. Zapuzdrenie}
+\begin{itemize}
+    \item Všetky atribúty tried sú deklarované ako private alebo protected
+    \item Prístup k atribútom je kontrolovaný cez gettery a settery
+    \item Príklad v triede \texttt{Paddle}: private atribúty \texttt{x}, \texttt{width}, \texttt{height}, \texttt{speed}
+\end{itemize}
+
+\subsection{3. Polymorfizmus}
+\begin{itemize}
+    \item Metóda \texttt{onHit()} je implementovaná rôzne v každej podtriede
+    \item \texttt{ToughBall} vyžaduje dva zásahy
+    \item \texttt{SplitBall} sa rozdelí na menšie loptičky
+    \item \texttt{GameManager} pracuje s loptičkami polymorfne cez referenciu na \texttt{Ball}
+\end{itemize}
+
+\subsection{4. Abstrakcia}
+\begin{itemize}
+    \item Abstraktná trieda \texttt{Ball} definuje rozhranie pre všetky loptičky
+    \item Trieda \texttt{GameManager} abstrahuje hernú logiku
+    \item \texttt{CollisionManager} abstrahuje detekciu kolízií
+\end{itemize}
+
+\section{Implementačné detaily}
+\subsection{Hlavné triedy}
+\begin{itemize}
+    \item \texttt{Ball} - Abstraktná trieda definujúca základné vlastnosti loptičiek
+    \item \texttt{GameManager} - Spravuje hernú logiku, kolízie a stav hry
+    \item \texttt{GamePanel} - Zobrazuje hru a spracováva užívateľský vstup
+    \item \texttt{Paddle} - Reprezentuje hráčom ovládané pádlo
+    \item \texttt{Bullet} - Reprezentuje projektily vystrelené z pádla
+\end{itemize}
+
+\subsection{Herné mechaniky}
+\begin{itemize}
+    
+    \item Rôzne typy loptičiek s unikátnym správaním
+    \item Bodový systém závislý od typu zničenej loptičky
+    \item Kolízny systém medzi loptičkami, projektilmi a pádlom
+\end{itemize}
+
+
+\end{document} 
